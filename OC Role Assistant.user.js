@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          OC Role Assistant
 // @namespace     https://github.com/Thunderkill/oc-role-assistant
-// @version       1.6.14
+// @version       1.6.15
 // @license       MIT
 // @description   Highlights best OC role using configurable CPR priorities
 // @author        Cypher-[2641265], Renger [3125174], Thunderkill [3201787]
@@ -14,6 +14,7 @@
 // ==/UserScript==
 
 //-----Changelog-----
+// v1.6.15 - Center the highlighted role in the nearest scrollable view when possible.
 // v1.6.14 - Allow any faction type value on the organized crimes route.
 // v1.6.13 - Relaxed faction crimes hash matching and hardened mutation handling for Torn route/content changes.
 // v1.6.12 - Restricted activation to the faction crimes route and anchored the status banner only to the visible OC list.
@@ -934,14 +935,51 @@
       currentHighlightedRole = null;
     }
 
-    function isElementInViewport(element) {
-      if (!element) return false;
+    function isScrollableElement(element) {
+      if (!element || element === document.body) return false;
 
-      const rect = element.getBoundingClientRect();
-      const viewHeight =
-        window.innerHeight || document.documentElement.clientHeight;
+      const style = window.getComputedStyle(element);
+      const canScrollY = /(auto|scroll)/.test(style.overflowY);
+      return canScrollY && element.scrollHeight > element.clientHeight + 4;
+    }
 
-      return rect.top >= 0 && rect.bottom <= viewHeight;
+    function getScrollableAncestor(element) {
+      let parent = element?.parentElement || null;
+
+      while (parent && parent !== document.body && parent !== document.documentElement) {
+        if (isScrollableElement(parent)) {
+          return parent;
+        }
+
+        parent = parent.parentElement;
+      }
+
+      return document.scrollingElement || document.documentElement;
+    }
+
+    function centerRoleInView(role) {
+      const scroller = getScrollableAncestor(role);
+      if (!scroller || scroller.scrollHeight <= scroller.clientHeight + 4) {
+        return;
+      }
+
+      const roleRect = role.getBoundingClientRect();
+      const scrollerRect =
+        scroller === document.scrollingElement || scroller === document.documentElement
+          ? { top: 0, height: window.innerHeight || document.documentElement.clientHeight }
+          : scroller.getBoundingClientRect();
+      const roleCenter = roleRect.top + roleRect.height / 2;
+      const scrollerCenter = scrollerRect.top + scrollerRect.height / 2;
+      const delta = roleCenter - scrollerCenter;
+
+      if (Math.abs(delta) < 24) {
+        return;
+      }
+
+      scroller.scrollBy({
+        top: delta,
+        behavior: "smooth",
+      });
     }
 
     function applyRoleHighlight(role) {
@@ -957,12 +995,7 @@
 
       if (currentHighlightedRole) {
         currentHighlightedRole.classList.add("pulsing-glow");
-        if (!isElementInViewport(currentHighlightedRole)) {
-          currentHighlightedRole.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
-        }
+        centerRoleInView(currentHighlightedRole);
       }
     }
 
