@@ -1,15 +1,158 @@
 {
-  "priorities": {},
+  "priorities": {
+    "1": [
+      { "scenario": "Ace in the Hole", "level": 9, "role": "Hacker", "minCPR": 67 }
+    ],
+    "2": [
+      { "scenario": "Ace in the Hole", "level": 9, "role": "Imitator", "minCPR": 65 },
+      { "scenario": "Ace in the Hole", "level": 9, "role": "Muscle #2", "minCPR": 66 },
+      { "scenario": "Ace in the Hole", "level": 9, "role": "Muscle #1", "minCPR": 65 }
+    ],
+    "3": [
+      { "scenario": "Ace in the Hole", "level": 9, "role": "Driver", "minCPR": 55 },
+      { "scenario": "Break the Bank", "level": 8, "role": "Muscle #3", "minCPR": 72 },
+      { "scenario": "Break the Bank", "level": 8, "role": "Thief #2", "minCPR": 72 }
+    ],
+    "4": [
+      { "scenario": "Stacking the Deck", "level": 8, "role": "Imitator", "minCPR": 72 },
+      { "scenario": "Clinical Precision", "level": 8, "role": "Imitator", "minCPR": 75 }
+    ],
+    "5": [
+      { "scenario": "Break the Bank", "level": 8, "role": "Robber", "minCPR": 65 },
+      { "scenario": "Break the Bank", "level": 8, "role": "Muscle #1", "minCPR": 65 },
+      { "scenario": "Break the Bank", "level": 8, "role": "Muscle #2", "minCPR": 65 },
+      { "scenario": "Stacking the Deck", "level": 8, "role": "Cat Burglar", "minCPR": 68 },
+      { "scenario": "Stacking the Deck", "level": 8, "role": "Hacker", "minCPR": 68 },
+      { "scenario": "Clinical Precision", "level": 8, "role": "Cat Burglar", "minCPR": 72 },
+      { "scenario": "Clinical Precision", "level": 8, "role": "Cleaner", "minCPR": 72 },
+      { "scenario": "Clinical Precision", "level": 8, "role": "Assassin", "minCPR": 70 }
+    ],
+    "6": [
+      { "scenario": "Blast from the Past", "level": 7, "role": "Muscle", "minCPR": 80 },
+      { "scenario": "Blast from the Past", "level": 7, "role": "Engineer", "minCPR": 78 },
+      { "scenario": "Stacking the Deck", "level": 8, "role": "Driver", "minCPR": 55 }
+    ],
+    "7": [
+      { "scenario": "Blast from the Past", "level": 7, "role": "Bomber", "minCPR": 75 },
+      { "scenario": "Blast from the Past", "level": 7, "role": "Picklock #1", "minCPR": 70 },
+      { "scenario": "Blast from the Past", "level": 7, "role": "Hacker", "minCPR": 70 },
+      { "scenario": "Window of Opportunity", "level": 7, "role": "Engineer", "minCPR": 75 },
+      { "scenario": "Window of Opportunity", "level": 7, "role": "Looter #1", "minCPR": 75 },
+      { "scenario": "Window of Opportunity", "level": 7, "role": "Looter #2", "minCPR": 75 },
+      { "scenario": "Window of Opportunity", "level": 7, "role": "Muscle #1", "minCPR": 75 },
+      { "scenario": "Window of Opportunity", "level": 7, "role": "Muscle #2", "minCPR": 75 }
+    ],
+    "991": [
+      { "scenario": "Break the Bank", "level": 8, "role": "Thief #1", "minCPR": 50 }
+    ],
+    "992": [
+      { "scenario": "Blast from the Past", "level": 7, "role": "Picklock #2", "minCPR": 1 }
+    ],
+    "9999": [
+      { "scenario": "Manifest Cruelty", "level": 8, "role": "Cat Burglar", "minCPR": 99 },
+      { "scenario": "Manifest Cruelty", "level": 8, "role": "Hacker", "minCPR": 99 },
+      { "scenario": "Manifest Cruelty", "level": 8, "role": "Interrogator", "minCPR": 99 },
+      { "scenario": "Manifest Cruelty", "level": 8, "role": "Reviver", "minCPR": 99 },
+      { "scenario": "Gone Fission", "level": 9, "role": "Hijacker", "minCPR": 99 },
+      { "scenario": "Gone Fission", "level": 9, "role": "Engineer", "minCPR": 99 },
+      { "scenario": "Gone Fission", "level": 9, "role": "Pickpocket", "minCPR": 99 },
+      { "scenario": "Gone Fission", "level": 9, "role": "Imitator", "minCPR": 99 },
+      { "scenario": "Gone Fission", "level": 9, "role": "Bomber", "minCPR": 99 },
+      { "scenario": "Crane Reaction", "level": 10, "role": "Sniper", "minCPR": 99 },
+      { "scenario": "Crane Reaction", "level": 10, "role": "Lookout", "minCPR": 99 },
+      { "scenario": "Crane Reaction", "level": 10, "role": "Engineer", "minCPR": 99 },
+      { "scenario": "Crane Reaction", "level": 10, "role": "Bomber", "minCPR": 99 },
+      { "scenario": "Crane Reaction", "level": 10, "role": "Muscle #1", "minCPR": 99 },
+      { "scenario": "Crane Reaction", "level": 10, "role": "Muscle #2", "minCPR": 99 }
+    ]
+  },
   "stallPolicy": {
     "default": {
       "start": "allow",
       "selectionOrder": "join-first",
       "join": {
-        "allow": true
+        "allow": true,
+        "minHoursBeforeStall": 0,
+        "maxHoursBeforeStall": 48
       }
     },
-    "scenarios": {}
+    "scenarios": {
+      "Ace in the Hole": {
+        "start": "allow",
+        "selectionOrder": "start-first",
+        "join": {
+          "allow": true
+        }
+      },
+      "Break the Bank": {
+        "start": "allow",
+        "selectionOrder": "start-first",
+        "join": {
+          "allow": true,
+          "minHoursBeforeStall": 0,
+          "maxHoursBeforeStall": 36
+        }
+      },
+      "Stacking the Deck": {
+        "start": "allow",
+        "selectionOrder": "start-first",
+        "join": {
+          "allow": true
+        }
+      },
+      "Clinical Precision": {
+        "start": "allow",
+        "selectionOrder": "start-first",
+        "join": {
+          "allow": true,
+          "minHoursBeforeStall": 0,
+          "maxHoursBeforeStall": 36
+        }
+      },
+      "Blast from the Past": {
+        "start": "allow",
+        "selectionOrder": "join-first",
+        "join": {
+          "allow": true,
+          "minHoursBeforeStall": 0,
+          "maxHoursBeforeStall": 24
+        }
+      },
+      "Window of Opportunity": {
+        "start": "allow",
+        "selectionOrder": "join-first",
+        "join": {
+          "allow": true,
+          "minHoursBeforeStall": 0,
+          "maxHoursBeforeStall": 24
+        }
+      },
+      "Manifest Cruelty": {
+        "start": "never",
+        "join": {
+          "allow": false
+        }
+      },
+      "Gone Fission": {
+        "start": "never",
+        "join": {
+          "allow": false
+        }
+      },
+      "Crane Reaction": {
+        "start": "never",
+        "join": {
+          "allow": false
+        }
+      }
+    }
   },
-  "maxCount": {},
-  "treatAsStalled": null
+  "maxCount": {
+    "10": 0,
+    "9": 2,
+    "8": 99,
+    "7": 9
+  },
+  "usageLogging": "no",
+  "treatAsStalled": 6
 }
