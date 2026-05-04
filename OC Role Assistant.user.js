@@ -1,17 +1,20 @@
 // ==UserScript==
 // @name          OC Role Assistant
 // @namespace     https://github.com/Thunderkill/oc-role-assistant
-// @version       1.6.10
+// @version       1.6.11
 // @license       MIT
 // @description   Highlights best OC role using configurable CPR priorities
-// @author        Cypher-[2641265], Renger [3125174], Thunderkill
+// @author        Cypher-[2641265], Renger [3125174], Thunderkill [3201787]
 // @match         https://www.torn.com/*
 // @icon          https://www.torn.com/favicon.ico
 // @grant         GM_xmlhttpRequest
 // @connect       raw.githubusercontent.com
+// @downloadURL   https://raw.githubusercontent.com/Thunderkill/oc-role-assistant/refs/heads/main/OC%20Role%20Assistant.user.js
+// @updateURL     https://raw.githubusercontent.com/Thunderkill/oc-role-assistant/refs/heads/main/OC%20Role%20Assistant.user.js
 // ==/UserScript==
 
 //-----Changelog-----
+// v1.6.11 - Added GitHub raw update and download URLs.
 // v1.6.10 - Added an in-page OC Assistant status banner when no matching role qualifies.
 // v1.6.9 - Improved Torn OC page detection, stronger visible role outline, config fetch fallback, and low-noise console diagnostics.
 // v1.6.8 - Switched to generic fork metadata, public GitHub config, new cache keys, and full embedded fallback config.
