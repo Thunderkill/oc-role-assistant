@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          OC Role Assistant
 // @namespace     https://github.com/Thunderkill/oc-role-assistant
-// @version       1.6.15
+// @version       1.6.16
 // @license       MIT
 // @description   Highlights best OC role using configurable CPR priorities
 // @author        Cypher-[2641265], Renger [3125174], Thunderkill [3201787]
@@ -14,6 +14,7 @@
 // ==/UserScript==
 
 //-----Changelog-----
+// v1.6.16 - Load config from cache first and refresh from GitHub only after one hour.
 // v1.6.15 - Center the highlighted role in the nearest scrollable view when possible.
 // v1.6.14 - Allow any faction type value on the organized crimes route.
 // v1.6.13 - Relaxed faction crimes hash matching and hardened mutation handling for Torn route/content changes.
@@ -47,7 +48,7 @@
     "https://raw.githubusercontent.com/Thunderkill/oc-role-assistant/refs/heads/main/oc-role-assistant-config.json";
   const CONFIG_CACHE_KEY = "oc-role-assistant-config-cache-v1";
   const CONFIG_TIMESTAMP_KEY = "oc-role-assistant-config-timestamp-v1";
-  const CONFIG_CACHE_DURATION = 6 * 60 * 60 * 1000;
+  const CONFIG_CACHE_DURATION = 60 * 60 * 1000;
 
   const DEFAULT_OC_CONFIG = {
     "priorities": {
@@ -1856,7 +1857,10 @@
     }
 
     try {
-      return JSON.parse(cachedData);
+      return {
+        config: JSON.parse(cachedData),
+        ageMs: cacheAge,
+      };
     } catch (error) {
       console.log("[OC Assistant] Invalid cached faction config:", error);
       return null;
@@ -1871,8 +1875,8 @@
   function loadFallbackConfig(source) {
     const cachedConfig = getCachedFactionConfig(true);
     applyFactionConfig(
-      cachedConfig || DEFAULT_OC_CONFIG,
-      cachedConfig ? "cache" : `${source} fallback`,
+      cachedConfig?.config || DEFAULT_OC_CONFIG,
+      cachedConfig ? "expired cache" : `${source} fallback`,
     );
   }
 
@@ -1894,6 +1898,12 @@
   }
 
   function loadFactionConfig() {
+    const cachedConfig = getCachedFactionConfig();
+    if (cachedConfig) {
+      applyFactionConfig(cachedConfig.config, "cache");
+      return;
+    }
+
     if (typeof GM_xmlhttpRequest !== "function") {
       fetch(CONFIG_URL, {
         headers: {
