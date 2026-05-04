@@ -789,6 +789,42 @@
       "treatAsStalled": 6
     };
 
+    const validScenarioRoles = [
+      { scenario: "First Aid and Abet", roles: ["Picklock", "Decoy", "Pickpocket"] },
+      { scenario: "Mob Mentality", roles: ["Looter"] },
+      { scenario: "Pet Project", roles: ["Kidnapper", "Muscle", "Picklock"] },
+      { scenario: "Best of the Lot", roles: ["Picklock", "Car Thief", "Muscle", "Imitator"] },
+      { scenario: "Cash Me if You Can", roles: ["Thief", "Lookout"] },
+      { scenario: "Thou Shalt Not Steal", roles: ["Picklock", "Thief", "Pickpocket"] },
+      { scenario: "Gaslight the Way", roles: ["Imitator", "Looter"] },
+      { scenario: "Market Forces", roles: ["Enforcer", "Negotiator", "Lookout", "Arsonist", "Muscle"] },
+      { scenario: "Smoke and Wing Mirrors", roles: ["Car Thief", "Imitator", "Hustler"] },
+      { scenario: "Plucking the Lotus Petal", roles: ["Robber", "Hustler", "Muscle"] },
+      { scenario: "Snow Blind", roles: ["Hustler", "Imitator", "Muscle"] },
+      { scenario: "Stage Fright", roles: ["Enforcer", "Muscle", "Lookout", "Sniper"] },
+      { scenario: "Counter Offer", roles: ["Robber", "Looter", "Hacker", "Picklock", "Engineer"] },
+      { scenario: "Guardian Ángels", roles: ["Enforcer", "Hustler", "Engineer"] },
+      { scenario: "Honey Trap", roles: ["Enforcer", "Muscle"] },
+      { scenario: "No Reserve", roles: ["Car Thief", "Techie", "Engineer"] },
+      { scenario: "Bidding War", roles: ["Robber", "Driver", "Bomber"] },
+      { scenario: "Leave No Trace", roles: ["Techie", "Negotiator", "Imitator"] },
+      { scenario: "Sneaky Git Grab", roles: ["Imitator", "Pickpocket", "Hacker", "Techie"] },
+      { scenario: "Blast from the Past", roles: ["Picklock", "Hacker", "Engineer", "Bomber", "Muscle"] },
+      { scenario: "Window of Opportunity", roles: ["Engineer", "Looter", "Muscle"] },
+      { scenario: "Break the Bank", roles: ["Robber", "Muscle", "Thief"] },
+      { scenario: "Clinical Precision", roles: ["Imitator", "Cat Burglar", "Assassin", "Cleaner"] },
+      { scenario: "Manifest Cruelty", roles: ["Hacker", "Interrogator", "Reviver", "Cat Burglar"] },
+      { scenario: "Stacking the Deck", roles: ["Cat Burglar", "Driver", "Hacker", "Imitator"] },
+      { scenario: "Ace in the Hole", roles: ["Imitator", "Muscle", "Hacker", "Driver"] },
+      { scenario: "Gone Fission", roles: ["Hijacker", "Engineer", "Pickpocket", "Imitator", "Bomber"] },
+      { scenario: "Crane Reaction", roles: ["Sniper", "Lookout", "Engineer", "Bomber", "Muscle"] },
+    ];
+
+    const validScenarioRoleMap = new Map(
+      validScenarioRoles.map(({ scenario, roles }) => [scenario, roles]),
+    );
+    const validScenarioNames = validScenarioRoles.map(({ scenario }) => scenario);
+
     const storageKey = "oc-role-assistant-config-builder-draft-v1";
     let state = normalizeConfig(loadInitialConfig());
     let activeTab = "priorities";
@@ -802,6 +838,45 @@
 
     function deepClone(value) {
       return JSON.parse(JSON.stringify(value));
+    }
+
+    function getScenarioRoles(scenario) {
+      return validScenarioRoleMap.get(scenario) || [];
+    }
+
+    function getRoleBase(role) {
+      return String(role || "").replace(/\s+#\d+$/, "").trim();
+    }
+
+    function getRoleNumber(role) {
+      const match = String(role || "").match(/\s+#(\d+)$/);
+      return match ? match[1] : "";
+    }
+
+    function formatRoleName(base, number) {
+      const cleanBase = String(base || "").trim();
+      const cleanNumber = String(number || "").trim();
+      if (!cleanBase) return "";
+      return cleanNumber ? `${cleanBase} #${cleanNumber}` : cleanBase;
+    }
+
+    function createDefaultRoleRule() {
+      const scenario = validScenarioNames[0] || "";
+      return {
+        scenario,
+        level: 7,
+        role: getScenarioRoles(scenario)[0] || "",
+        minCPR: 70,
+      };
+    }
+
+    function isValidScenario(scenario) {
+      return validScenarioRoleMap.has(scenario);
+    }
+
+    function isValidRoleForScenario(scenario, role) {
+      const base = getRoleBase(role);
+      return Boolean(base) && getScenarioRoles(scenario).includes(base);
     }
 
     function loadInitialConfig() {
@@ -1082,7 +1157,7 @@
       `;
 
       nodes.priorityEditor.querySelector("#addRoleRule").addEventListener("click", () => {
-        rows.push({ scenario: "", level: 7, role: "", minCPR: 70 });
+        rows.push(createDefaultRoleRule());
         render();
       });
 
@@ -1125,6 +1200,7 @@
                 <th>Scenario</th>
                 <th>Level</th>
                 <th>Role</th>
+                <th>Role #</th>
                 <th>Min CPR</th>
                 <th>Actions</th>
               </tr>
@@ -1132,9 +1208,18 @@
             <tbody>
               ${rows.map((row, index) => `
                 <tr data-role-index="${index}">
-                  <td><input data-field="scenario" value="${escapeHtml(row.scenario)}" list="scenarioNames"></td>
+                  <td>
+                    <select data-field="scenario" aria-label="Scenario">
+                      ${renderScenarioOptions(row.scenario)}
+                    </select>
+                  </td>
                   <td><input data-field="level" type="number" min="1" max="10" step="1" value="${escapeHtml(row.level)}"></td>
-                  <td><input data-field="role" value="${escapeHtml(row.role)}"></td>
+                  <td>
+                    <select data-field="role" aria-label="Role">
+                      ${renderRoleOptions(row.scenario, row.role)}
+                    </select>
+                  </td>
+                  <td><input data-field="roleNumber" class="small-number" type="number" min="1" step="1" value="${escapeHtml(getRoleNumber(row.role))}" aria-label="Role number"></td>
                   <td><input data-field="minCPR" type="number" min="0" max="100" step="1" value="${escapeHtml(row.minCPR)}"></td>
                   <td>
                     <div class="inline-actions">
@@ -1147,7 +1232,6 @@
             </tbody>
           </table>
         </div>
-        ${renderScenarioDatalist()}
       `;
     }
 
@@ -1156,8 +1240,25 @@
       rowElement.querySelectorAll("[data-field]").forEach((input) => {
         input.addEventListener("change", () => {
           const field = input.dataset.field;
-          rows[index][field] =
-            field === "level" || field === "minCPR" ? toNumber(input.value, 0) : input.value;
+          const row = rows[index];
+          if (field === "level" || field === "minCPR") {
+            row[field] = toNumber(input.value, 0);
+          } else if (field === "scenario") {
+            const previousBase = getRoleBase(row.role);
+            const previousNumber = getRoleNumber(row.role);
+            const nextRoles = getScenarioRoles(input.value);
+            const baseIsStillValid = nextRoles.includes(previousBase);
+
+            row.scenario = input.value;
+            row.role = formatRoleName(
+              baseIsStillValid ? previousBase : nextRoles[0] || "",
+              baseIsStillValid ? previousNumber : "",
+            );
+          } else if (field === "role") {
+            row.role = formatRoleName(input.value, getRoleNumber(row.role));
+          } else if (field === "roleNumber") {
+            row.role = formatRoleName(getRoleBase(row.role), input.value);
+          }
           render();
         });
       });
@@ -1173,26 +1274,45 @@
       });
     }
 
-    function renderScenarioDatalist() {
-      const names = getKnownScenarios();
-      return `
-        <datalist id="scenarioNames">
-          ${names.map((name) => `<option value="${escapeHtml(name)}"></option>`).join("")}
-        </datalist>
-      `;
+    function renderScenarioOptions(selected, includeBlank = true) {
+      const hasSelected = selected && validScenarioNames.includes(selected);
+      const options = [];
+
+      if (includeBlank) options.push('<option value="">Choose scenario</option>');
+      if (selected && !hasSelected) {
+        options.push(`<option value="${escapeHtml(selected)}" selected>Unknown: ${escapeHtml(selected)}</option>`);
+      }
+
+      validScenarioNames.forEach((name) => {
+        options.push(
+          `<option value="${escapeHtml(name)}" ${name === selected ? "selected" : ""}>${escapeHtml(name)}</option>`,
+        );
+      });
+
+      return options.join("");
     }
 
-    function getKnownScenarios() {
-      const names = new Set();
-      Object.values(state.priorities).forEach((rows) => {
-        rows.forEach((row) => {
-          if (row.scenario.trim()) names.add(row.scenario.trim());
-        });
+    function renderRoleOptions(scenario, selectedRole) {
+      const roles = getScenarioRoles(scenario);
+      const selectedBase = getRoleBase(selectedRole);
+      const hasSelected = selectedBase && roles.includes(selectedBase);
+      const options = [];
+
+      if (!roles.length) {
+        options.push('<option value="">Choose scenario first</option>');
+      } else if (!selectedBase) {
+        options.push('<option value="">Choose role</option>');
+      } else if (!hasSelected) {
+        options.push(`<option value="${escapeHtml(selectedBase)}" selected>Unknown: ${escapeHtml(selectedBase)}</option>`);
+      }
+
+      roles.forEach((role) => {
+        options.push(
+          `<option value="${escapeHtml(role)}" ${role === selectedBase ? "selected" : ""}>${escapeHtml(role)}</option>`,
+        );
       });
-      Object.keys(state.stallPolicy.scenarios).forEach((name) => {
-        if (name.trim()) names.add(name.trim());
-      });
-      return Array.from(names).sort((a, b) => a.localeCompare(b));
+
+      return options.join("");
     }
 
     function renderPolicies() {
@@ -1212,7 +1332,9 @@
             .map(([scenario, policy], index) => `
               <div class="panel" data-policy-index="${index}" data-scenario="${escapeHtml(scenario)}">
                 <div class="panel-header">
-                  <input data-policy-name value="${escapeHtml(scenario)}" list="scenarioNames" aria-label="Scenario name">
+                  <select data-policy-name aria-label="Scenario name">
+                    ${renderScenarioOptions(scenario, false)}
+                  </select>
                   <button data-delete-policy class="danger" type="button">Delete</button>
                 </div>
                 <div class="panel-body">
@@ -1220,7 +1342,7 @@
                 </div>
               </div>
             `)
-            .join("") + renderScenarioDatalist()
+            .join("")
         : '<div class="empty-state">No scenario overrides.</div>';
 
       nodes.scenarioPolicies.querySelectorAll("[data-policy-index]").forEach((policyElement) => {
@@ -1387,6 +1509,15 @@
           const label = `Priority ${priority}, row ${index + 1}`;
           if (!row.scenario) issues.push(`${label}: scenario is empty.`);
           if (!row.role) issues.push(`${label}: role is empty.`);
+          if (row.scenario && !isValidScenario(row.scenario)) {
+            issues.push(`${label}: "${row.scenario}" is not a valid scenario.`);
+          }
+          if (row.scenario && row.role && !isValidRoleForScenario(row.scenario, row.role)) {
+            issues.push(`${label}: "${getRoleBase(row.role)}" is not valid for ${row.scenario}.`);
+          }
+          if (getRoleNumber(row.role) && Number(getRoleNumber(row.role)) < 1) {
+            issues.push(`${label}: role number should be 1 or higher.`);
+          }
           if (!Number.isFinite(row.level) || row.level < 1 || row.level > 10) {
             issues.push(`${label}: level should be between 1 and 10.`);
           }
@@ -1407,6 +1538,9 @@
 
       Object.entries(config.stallPolicy.scenarios).forEach(([scenario, policy]) => {
         if (!scenario.trim()) issues.push("Scenario policy has an empty scenario name.");
+        if (scenario.trim() && !isValidScenario(scenario)) {
+          issues.push(`Policy ${scenario}: scenario is not valid.`);
+        }
         validatePolicyHours(policy, `Policy ${scenario}`, issues);
       });
 
@@ -1488,12 +1622,10 @@
     });
 
     nodes.addPolicy.addEventListener("click", () => {
-      let base = "New Scenario";
-      let name = base;
-      let suffix = 2;
-      while (state.stallPolicy.scenarios[name]) {
-        name = `${base} ${suffix}`;
-        suffix += 1;
+      const name = validScenarioNames.find((scenario) => !state.stallPolicy.scenarios[scenario]);
+      if (!name) {
+        toast("Every valid scenario already has a policy.");
+        return;
       }
       state.stallPolicy.scenarios[name] = normalizePolicy({}, true);
       render();
