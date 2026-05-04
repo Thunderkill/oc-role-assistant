@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          OC Role Assistant
 // @namespace     https://github.com/Thunderkill/oc-role-assistant
-// @version       1.6.12
+// @version       1.6.13
 // @license       MIT
 // @description   Highlights best OC role using configurable CPR priorities
 // @author        Cypher-[2641265], Renger [3125174], Thunderkill [3201787]
@@ -14,6 +14,7 @@
 // ==/UserScript==
 
 //-----Changelog-----
+// v1.6.13 - Relaxed faction crimes hash matching and hardened mutation handling for Torn route/content changes.
 // v1.6.12 - Restricted activation to the faction crimes route and anchored the status banner only to the visible OC list.
 // v1.6.11 - Added GitHub raw update and download URLs.
 // v1.6.10 - Added an in-page OC Assistant status banner when no matching role qualifies.
@@ -761,12 +762,14 @@
       const step = urlParams.get("step");
       const type = urlParams.get("type");
       const hash = window.location.hash.toLowerCase();
+      const isCrimesHash =
+        hash.includes("tab=crimes") || hash.includes("faction-crimes");
 
       return (
         window.location.pathname.endsWith("/factions.php") &&
         step === "your" &&
         type === "1" &&
-        hash.startsWith("#/tab=crimes")
+        isCrimesHash
       );
     }
 
@@ -1565,6 +1568,11 @@
 
       if (!isTargetCrimesPage()) {
         clearPageEffects();
+        logScanState("Route inactive", {
+          path: window.location.pathname,
+          search: window.location.search,
+          hash: window.location.hash,
+        });
         return;
       }
 
@@ -1642,10 +1650,16 @@
           }
 
           // Check for badge changes (user joining/leaving)
-          if (target.matches && target.matches('.badge___E7fuw, [class*="badge"]')) {
+          if (
+            target instanceof Element &&
+            target.matches('.badge___E7fuw, [class*="badge"]')
+          ) {
             hasBadgeChange = true;
           }
-          if (target.closest('.badge___E7fuw, [class*="badge"]')) {
+          if (
+            target instanceof Element &&
+            target.closest('.badge___E7fuw, [class*="badge"]')
+          ) {
             hasBadgeChange = true;
           }
         }
