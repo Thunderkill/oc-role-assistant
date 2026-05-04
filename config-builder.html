@@ -844,32 +844,6 @@
       return validScenarioRoleMap.get(scenario) || [];
     }
 
-    function getRoleBase(role) {
-      return String(role || "").replace(/\s+#\d+$/, "").trim();
-    }
-
-    function getRoleNumber(role) {
-      const match = String(role || "").match(/\s+#(\d+)$/);
-      return match ? match[1] : "";
-    }
-
-    function formatRoleName(base, number) {
-      const cleanBase = String(base || "").trim();
-      const cleanNumber = String(number || "").trim();
-      if (!cleanBase) return "";
-      return cleanNumber ? `${cleanBase} #${cleanNumber}` : cleanBase;
-    }
-
-    function resolveScenarioRole(scenario, role, number) {
-      const roles = getScenarioRoles(scenario);
-      const base = getRoleBase(role);
-      const exactRole = formatRoleName(base, number);
-
-      if (exactRole && roles.includes(exactRole)) return exactRole;
-      if (!String(number || "").trim() && base && roles.includes(base)) return base;
-      return String(role || "").trim();
-    }
-
     function createDefaultRoleRule() {
       const scenario = validScenarioNames[0] || "";
       return {
@@ -1211,7 +1185,6 @@
                 <th>Scenario</th>
                 <th>Level</th>
                 <th>Role</th>
-                <th>Role #</th>
                 <th>Min CPR</th>
                 <th>Actions</th>
               </tr>
@@ -1230,7 +1203,6 @@
                       ${renderRoleOptions(row.scenario, row.role)}
                     </select>
                   </td>
-                  <td><input data-field="roleNumber" class="small-number" type="number" min="1" step="1" value="${escapeHtml(getRoleNumber(row.role))}" aria-label="Role number"></td>
                   <td><input data-field="minCPR" type="number" min="0" max="100" step="1" value="${escapeHtml(row.minCPR)}"></td>
                   <td>
                     <div class="inline-actions">
@@ -1262,8 +1234,6 @@
             row.role = nextRoles.includes(previousRole) ? previousRole : nextRoles[0] || "";
           } else if (field === "role") {
             row.role = input.value;
-          } else if (field === "roleNumber") {
-            row.role = resolveScenarioRole(row.scenario, row.role, input.value);
           }
           render();
         });
@@ -1519,10 +1489,7 @@
             issues.push(`${label}: "${row.scenario}" is not a valid scenario.`);
           }
           if (row.scenario && row.role && !isValidRoleForScenario(row.scenario, row.role)) {
-            issues.push(`${label}: "${getRoleBase(row.role)}" is not valid for ${row.scenario}.`);
-          }
-          if (getRoleNumber(row.role) && Number(getRoleNumber(row.role)) < 1) {
-            issues.push(`${label}: role number should be 1 or higher.`);
+            issues.push(`${label}: "${row.role}" is not valid for ${row.scenario}.`);
           }
           if (!Number.isFinite(row.level) || row.level < 1 || row.level > 10) {
             issues.push(`${label}: level should be between 1 and 10.`);
