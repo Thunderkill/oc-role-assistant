@@ -791,33 +791,33 @@
 
     const validScenarioRoles = [
       { scenario: "First Aid and Abet", roles: ["Picklock", "Decoy", "Pickpocket"] },
-      { scenario: "Mob Mentality", roles: ["Looter"] },
+      { scenario: "Mob Mentality", roles: ["Looter #1", "Looter #2", "Looter #3", "Looter #4"] },
       { scenario: "Pet Project", roles: ["Kidnapper", "Muscle", "Picklock"] },
       { scenario: "Best of the Lot", roles: ["Picklock", "Car Thief", "Muscle", "Imitator"] },
-      { scenario: "Cash Me if You Can", roles: ["Thief", "Lookout"] },
+      { scenario: "Cash Me if You Can", roles: ["Thief #1", "Thief #2", "Lookout"] },
       { scenario: "Thou Shalt Not Steal", roles: ["Picklock", "Thief", "Pickpocket"] },
-      { scenario: "Gaslight the Way", roles: ["Imitator", "Looter"] },
+      { scenario: "Gaslight the Way", roles: ["Imitator #1", "Looter #1", "Imitator #2", "Looter #2", "Imitator #3", "Looter #3"] },
       { scenario: "Market Forces", roles: ["Enforcer", "Negotiator", "Lookout", "Arsonist", "Muscle"] },
-      { scenario: "Smoke and Wing Mirrors", roles: ["Car Thief", "Imitator", "Hustler"] },
-      { scenario: "Plucking the Lotus Petal", roles: ["Robber", "Hustler", "Muscle"] },
-      { scenario: "Snow Blind", roles: ["Hustler", "Imitator", "Muscle"] },
-      { scenario: "Stage Fright", roles: ["Enforcer", "Muscle", "Lookout", "Sniper"] },
+      { scenario: "Smoke and Wing Mirrors", roles: ["Car Thief", "Imitator", "Hustler #1", "Hustler #2"] },
+      { scenario: "Plucking the Lotus Petal", roles: ["Robber #1", "Hustler", "Robber #2", "Muscle"] },
+      { scenario: "Snow Blind", roles: ["Hustler", "Imitator", "Muscle #1", "Muscle #2"] },
+      { scenario: "Stage Fright", roles: ["Enforcer", "Muscle #1", "Muscle #2", "Muscle #3", "Lookout", "Sniper"] },
       { scenario: "Counter Offer", roles: ["Robber", "Looter", "Hacker", "Picklock", "Engineer"] },
       { scenario: "Guardian Ángels", roles: ["Enforcer", "Hustler", "Engineer"] },
-      { scenario: "Honey Trap", roles: ["Enforcer", "Muscle"] },
+      { scenario: "Honey Trap", roles: ["Enforcer", "Muscle #1", "Muscle #2"] },
       { scenario: "No Reserve", roles: ["Car Thief", "Techie", "Engineer"] },
-      { scenario: "Bidding War", roles: ["Robber", "Driver", "Bomber"] },
+      { scenario: "Bidding War", roles: ["Robber #1", "Driver", "Robber #2", "Robber #3", "Bomber #1", "Bomber #2"] },
       { scenario: "Leave No Trace", roles: ["Techie", "Negotiator", "Imitator"] },
       { scenario: "Sneaky Git Grab", roles: ["Imitator", "Pickpocket", "Hacker", "Techie"] },
-      { scenario: "Blast from the Past", roles: ["Picklock", "Hacker", "Engineer", "Bomber", "Muscle"] },
-      { scenario: "Window of Opportunity", roles: ["Engineer", "Looter", "Muscle"] },
-      { scenario: "Break the Bank", roles: ["Robber", "Muscle", "Thief"] },
+      { scenario: "Blast from the Past", roles: ["Picklock #1", "Hacker", "Engineer", "Bomber", "Muscle", "Picklock #2"] },
+      { scenario: "Window of Opportunity", roles: ["Engineer", "Looter #1", "Looter #2", "Muscle #1", "Muscle #2"] },
+      { scenario: "Break the Bank", roles: ["Robber", "Muscle #1", "Muscle #2", "Thief #1", "Muscle #3", "Thief #2"] },
       { scenario: "Clinical Precision", roles: ["Imitator", "Cat Burglar", "Assassin", "Cleaner"] },
       { scenario: "Manifest Cruelty", roles: ["Hacker", "Interrogator", "Reviver", "Cat Burglar"] },
       { scenario: "Stacking the Deck", roles: ["Cat Burglar", "Driver", "Hacker", "Imitator"] },
-      { scenario: "Ace in the Hole", roles: ["Imitator", "Muscle", "Hacker", "Driver"] },
+      { scenario: "Ace in the Hole", roles: ["Imitator", "Muscle #1", "Muscle #2", "Hacker", "Driver"] },
       { scenario: "Gone Fission", roles: ["Hijacker", "Engineer", "Pickpocket", "Imitator", "Bomber"] },
-      { scenario: "Crane Reaction", roles: ["Sniper", "Lookout", "Engineer", "Bomber", "Muscle"] },
+      { scenario: "Crane Reaction", roles: ["Sniper", "Lookout", "Engineer", "Bomber", "Muscle #1", "Muscle #2"] },
     ];
 
     const validScenarioRoleMap = new Map(
@@ -844,22 +844,6 @@
       return validScenarioRoleMap.get(scenario) || [];
     }
 
-    function getRoleBase(role) {
-      return String(role || "").replace(/\s+#\d+$/, "").trim();
-    }
-
-    function getRoleNumber(role) {
-      const match = String(role || "").match(/\s+#(\d+)$/);
-      return match ? match[1] : "";
-    }
-
-    function formatRoleName(base, number) {
-      const cleanBase = String(base || "").trim();
-      const cleanNumber = String(number || "").trim();
-      if (!cleanBase) return "";
-      return cleanNumber ? `${cleanBase} #${cleanNumber}` : cleanBase;
-    }
-
     function createDefaultRoleRule() {
       const scenario = validScenarioNames[0] || "";
       return {
@@ -875,8 +859,9 @@
     }
 
     function isValidRoleForScenario(scenario, role) {
-      const base = getRoleBase(role);
-      return Boolean(base) && getScenarioRoles(scenario).includes(base);
+      const exactRole = String(role || "").trim();
+      if (!exactRole) return false;
+      return getScenarioRoles(scenario).includes(exactRole);
     }
 
     function loadInitialConfig() {
@@ -1200,7 +1185,6 @@
                 <th>Scenario</th>
                 <th>Level</th>
                 <th>Role</th>
-                <th>Role #</th>
                 <th>Min CPR</th>
                 <th>Actions</th>
               </tr>
@@ -1219,7 +1203,6 @@
                       ${renderRoleOptions(row.scenario, row.role)}
                     </select>
                   </td>
-                  <td><input data-field="roleNumber" class="small-number" type="number" min="1" step="1" value="${escapeHtml(getRoleNumber(row.role))}" aria-label="Role number"></td>
                   <td><input data-field="minCPR" type="number" min="0" max="100" step="1" value="${escapeHtml(row.minCPR)}"></td>
                   <td>
                     <div class="inline-actions">
@@ -1244,20 +1227,13 @@
           if (field === "level" || field === "minCPR") {
             row[field] = toNumber(input.value, 0);
           } else if (field === "scenario") {
-            const previousBase = getRoleBase(row.role);
-            const previousNumber = getRoleNumber(row.role);
+            const previousRole = String(row.role || "").trim();
             const nextRoles = getScenarioRoles(input.value);
-            const baseIsStillValid = nextRoles.includes(previousBase);
 
             row.scenario = input.value;
-            row.role = formatRoleName(
-              baseIsStillValid ? previousBase : nextRoles[0] || "",
-              baseIsStillValid ? previousNumber : "",
-            );
+            row.role = nextRoles.includes(previousRole) ? previousRole : nextRoles[0] || "";
           } else if (field === "role") {
-            row.role = formatRoleName(input.value, getRoleNumber(row.role));
-          } else if (field === "roleNumber") {
-            row.role = formatRoleName(getRoleBase(row.role), input.value);
+            row.role = input.value;
           }
           render();
         });
@@ -1294,21 +1270,21 @@
 
     function renderRoleOptions(scenario, selectedRole) {
       const roles = getScenarioRoles(scenario);
-      const selectedBase = getRoleBase(selectedRole);
-      const hasSelected = selectedBase && roles.includes(selectedBase);
+      const exactRole = String(selectedRole || "").trim();
+      const hasSelected = exactRole && roles.includes(exactRole);
       const options = [];
 
       if (!roles.length) {
         options.push('<option value="">Choose scenario first</option>');
-      } else if (!selectedBase) {
+      } else if (!exactRole) {
         options.push('<option value="">Choose role</option>');
       } else if (!hasSelected) {
-        options.push(`<option value="${escapeHtml(selectedBase)}" selected>Unknown: ${escapeHtml(selectedBase)}</option>`);
+        options.push(`<option value="${escapeHtml(exactRole)}" selected>Unknown: ${escapeHtml(exactRole)}</option>`);
       }
 
       roles.forEach((role) => {
         options.push(
-          `<option value="${escapeHtml(role)}" ${role === selectedBase ? "selected" : ""}>${escapeHtml(role)}</option>`,
+          `<option value="${escapeHtml(role)}" ${role === exactRole ? "selected" : ""}>${escapeHtml(role)}</option>`,
         );
       });
 
@@ -1513,10 +1489,7 @@
             issues.push(`${label}: "${row.scenario}" is not a valid scenario.`);
           }
           if (row.scenario && row.role && !isValidRoleForScenario(row.scenario, row.role)) {
-            issues.push(`${label}: "${getRoleBase(row.role)}" is not valid for ${row.scenario}.`);
-          }
-          if (getRoleNumber(row.role) && Number(getRoleNumber(row.role)) < 1) {
-            issues.push(`${label}: role number should be 1 or higher.`);
+            issues.push(`${label}: "${row.role}" is not valid for ${row.scenario}.`);
           }
           if (!Number.isFinite(row.level) || row.level < 1 || row.level > 10) {
             issues.push(`${label}: level should be between 1 and 10.`);
