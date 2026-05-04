@@ -860,6 +860,16 @@
       return cleanNumber ? `${cleanBase} #${cleanNumber}` : cleanBase;
     }
 
+    function resolveScenarioRole(scenario, role, number) {
+      const roles = getScenarioRoles(scenario);
+      const base = getRoleBase(role);
+      const exactRole = formatRoleName(base, number);
+
+      if (exactRole && roles.includes(exactRole)) return exactRole;
+      if (!String(number || "").trim() && base && roles.includes(base)) return base;
+      return String(role || "").trim();
+    }
+
     function createDefaultRoleRule() {
       const scenario = validScenarioNames[0] || "";
       return {
@@ -1253,7 +1263,7 @@
           } else if (field === "role") {
             row.role = input.value;
           } else if (field === "roleNumber") {
-            row.role = formatRoleName(getRoleBase(row.role), input.value);
+            row.role = resolveScenarioRole(row.scenario, row.role, input.value);
           }
           render();
         });
