@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          OC Role Assistant
 // @namespace     https://github.com/Thunderkill/oc-role-assistant
-// @version       1.6.11
+// @version       1.6.12
 // @license       MIT
 // @description   Highlights best OC role using configurable CPR priorities
 // @author        Cypher-[2641265], Renger [3125174], Thunderkill [3201787]
@@ -14,6 +14,7 @@
 // ==/UserScript==
 
 //-----Changelog-----
+// v1.6.12 - Restricted activation to the faction crimes route and anchored the status banner only to the visible OC list.
 // v1.6.11 - Added GitHub raw update and download URLs.
 // v1.6.10 - Added an in-page OC Assistant status banner when no matching role qualifies.
 // v1.6.9 - Improved Torn OC page detection, stronger visible role outline, config fetch fallback, and low-noise console diagnostics.
@@ -755,15 +756,17 @@
       console.log(`[OC Assistant] ${message}`, details);
     }
 
-    function isOnCrimesPage() {
+    function isTargetCrimesPage() {
       const urlParams = new URLSearchParams(window.location.search);
       const step = urlParams.get("step");
+      const type = urlParams.get("type");
       const hash = window.location.hash.toLowerCase();
 
       return (
         window.location.pathname.endsWith("/factions.php") &&
         step === "your" &&
-        (hash.includes("tab=crimes") || hash.includes("faction-crimes"))
+        type === "1" &&
+        hash.startsWith("#/tab=crimes")
       );
     }
 
@@ -774,6 +777,10 @@
     // Check if we're on the recruiting tab. Torn has changed tab markup before,
     // so fall back to the crimes page with visible OC scenario cards.
     function isOnRecruitingPage() {
+      if (!isTargetCrimesPage()) {
+        return false;
+      }
+
       if (hasActiveTabText(/recruiting|recruitment|available/i)) {
         return true;
       }
@@ -782,7 +789,7 @@
         return false;
       }
 
-      return isOnCrimesPage() && getCachedScenarios().length > 0;
+      return getCachedScenarios().length > 0;
     }
 
     // Inject styles once
@@ -854,16 +861,18 @@
     }
 
     function getAssistantStatusHost() {
-      return (
-        document.querySelector("#faction-main-container") ||
-        document.querySelector("[data-oc-id]")?.parentElement ||
-        document.body
-      );
+      return document.querySelector("[data-oc-id]")?.parentElement || null;
     }
 
     function getAssistantStatusElement() {
       let status = document.getElementById("oc-assistant-status");
       const host = getAssistantStatusHost();
+      const firstScenario = document.querySelector("[data-oc-id]");
+
+      if (!host || !firstScenario) {
+        removeAssistantStatus();
+        return null;
+      }
 
       if (!status) {
         status = document.createElement("div");
@@ -880,22 +889,29 @@
       }
 
       if (status.parentElement !== host) {
-        host.prepend(status);
+        host.insertBefore(status, firstScenario);
+      } else if (status.nextElementSibling !== firstScenario) {
+        host.insertBefore(status, firstScenario);
       }
 
       return status;
     }
 
     function setAssistantStatus(titleText, detailText) {
-      if (!isOnCrimesPage() && getCachedScenarios().length === 0) {
-        hideAssistantStatus();
-        return;
+      if (!isTargetCrimesPage()) {
+        removeAssistantStatus();
+        return false;
       }
 
       const status = getAssistantStatusElement();
-      status.querySelector(".oc-assistant-status-title").textContent = titleText;
-      status.querySelector(".oc-assistant-status-detail").textContent = detailText;
+      if (!status) {
+        return false;
+      }
+
+      queryFirst(status, [".oc-assistant-status-title"]).textContent = titleText;
+      queryFirst(status, [".oc-assistant-status-detail"]).textContent = detailText;
       status.classList.remove("oc-assistant-status-hidden");
+      return true;
     }
 
     function hideAssistantStatus() {
@@ -903,6 +919,10 @@
       if (status) {
         status.classList.add("oc-assistant-status-hidden");
       }
+    }
+
+    function removeAssistantStatus() {
+      document.getElementById("oc-assistant-status")?.remove();
     }
 
     function clearCurrentHighlight() {
@@ -974,36 +994,24 @@
 
     // Function to check for missing items (inactive roles for current user)
     function checkForMissingItems() {
+      if (!isTargetCrimesPage()) {
+        localStorage.removeItem("oc_missing_items");
+        removeRedHighlighting();
+        return;
+      }
+
       const user = getCurrentUser();
       if (!user || !user.name) return;
 
-      // Check if we're on crimes page (recruiting or planning)
-      const urlParams = new URLSearchParams(window.location.search);
-      const step = urlParams.get("step");
-      const hash = window.location.hash;
-      const isCrimesPage =
-        step === "your" &&
-        (hash.includes("tab=crimes") || hash.includes("faction-crimes"));
-
       // Use helper function to check if user has missing items
-      const hasMissingItems = isCrimesPage ? doesUserHaveMissingItems() : false;
+      const hasMissingItems = doesUserHaveMissingItems();
 
-      if (isCrimesPage) {
-        // On OC page, update localStorage based on missing items
-        if (hasMissingItems) {
-          localStorage.setItem("oc_missing_items", "1");
-          highlightNavigationForMissingItems();
-        } else {
-          localStorage.removeItem("oc_missing_items");
-          removeRedHighlighting();
-        }
+      if (hasMissingItems) {
+        localStorage.setItem("oc_missing_items", "1");
+        highlightNavigationForMissingItems();
       } else {
-        // Not on OC page, use localStorage to determine highlighting
-        if (localStorage.getItem("oc_missing_items") === "1") {
-          highlightNavigationForMissingItems();
-        } else {
-          removeRedHighlighting();
-        }
+        localStorage.removeItem("oc_missing_items");
+        removeRedHighlighting();
       }
     }
 
@@ -1021,6 +1029,15 @@
         .forEach((el) => el.classList.remove("oc-missing-items-highlight"));
     }
 
+    function clearPageEffects() {
+      clearCurrentHighlight();
+      removeAssistantStatus();
+      removeRedHighlighting();
+      document
+        .querySelectorAll(".oc-highlight")
+        .forEach((el) => el.classList.remove("oc-highlight"));
+    }
+
     // After a join, poll briefly for missing-items state (inactive icon can appear late)
     function startJoinMissingItemsPolling() {
       if (joinMissingItemsPollId) {
@@ -1032,6 +1049,12 @@
       const pollIntervalMs = 250;
 
       joinMissingItemsPollId = setInterval(() => {
+        if (!isTargetCrimesPage()) {
+          clearInterval(joinMissingItemsPollId);
+          joinMissingItemsPollId = null;
+          return;
+        }
+
         userRoleState = null;
         cachedScenarios = null;
 
@@ -1062,13 +1085,13 @@
         // Only highlight roles if we're on the recruiting page
         if (!isOnRecruitingPage()) {
           clearCurrentHighlight();
-          if (isOnCrimesPage()) {
+          if (isTargetCrimesPage()) {
             setAssistantStatus(
               "OC Role Assistant is waiting for recruitable roles.",
               "Open the recruiting view, or wait for Torn to finish loading the organized crimes list.",
             );
           } else {
-            hideAssistantStatus();
+            clearPageEffects();
           }
           logScanState("Waiting for the OC recruiting page", {
             path: window.location.pathname,
@@ -1535,7 +1558,51 @@
       return null;
     }
 
+    function handlePageStateChanged() {
+      cachedScenarios = null;
+      cachedNavigationLinks = null;
+      userRoleState = null;
+
+      if (!isTargetCrimesPage()) {
+        clearPageEffects();
+        return;
+      }
+
+      debouncedMissingItemsCheck();
+      debouncedHighlight();
+      highlightOCMenuIfNeeded();
+    }
+
+    function installRouteChangeHooks() {
+      const marker = "__ocRoleAssistantRouteHooksInstalled";
+      if (window[marker]) {
+        return;
+      }
+
+      window[marker] = true;
+
+      ["pushState", "replaceState"].forEach((method) => {
+        const original = history[method];
+        history[method] = function (...args) {
+          const result = original.apply(this, args);
+          window.dispatchEvent(new Event("oc-assistant-route-change"));
+          return result;
+        };
+      });
+
+      window.addEventListener("hashchange", handlePageStateChanged);
+      window.addEventListener("popstate", handlePageStateChanged);
+      window.addEventListener("oc-assistant-route-change", handlePageStateChanged);
+    }
+
     function highlightOCMenuIfNeeded() {
+      if (!isTargetCrimesPage()) {
+        document
+          .querySelectorAll(".oc-highlight")
+          .forEach((el) => el.classList.remove("oc-highlight"));
+        return;
+      }
+
       const ocStatusIcon = Array.from(
         document.querySelectorAll('a[aria-label]'),
       ).find((a) =>
@@ -1551,6 +1618,7 @@
       }
     }
 
+    installRouteChangeHooks();
     highlightOCMenuIfNeeded();
     const ocMenuObserver = new MutationObserver(highlightOCMenuIfNeeded);
     ocMenuObserver.observe(document.body, { childList: true, subtree: true });
@@ -1585,6 +1653,11 @@
 
       if (!shouldUpdate) return;
 
+      if (!isTargetCrimesPage()) {
+        clearPageEffects();
+        return;
+      }
+
       // Clear caches when DOM changes
       cachedScenarios = null;
       cachedNavigationLinks = null;
@@ -1601,9 +1674,7 @@
       }
     });
 
-    const ocContainer =
-      document.querySelector("#faction-main-container") || document.body;
-    observer.observe(ocContainer, {
+    observer.observe(document.body, {
       childList: true,
       subtree: true,
       attributes: false,
@@ -1614,6 +1685,10 @@
     document.addEventListener(
       "click",
       (e) => {
+        if (!isTargetCrimesPage()) {
+          return;
+        }
+
         const joinButton = e.target.closest('.joinButton___Ikoyy, [class*="joinButton"], button, a');
         if (joinButton && /join/i.test(joinButton.textContent.trim())) {
           // Clear user role state cache to force refresh
@@ -1647,22 +1722,11 @@
       true,
     ); // Use capture phase for more reliable detection
 
-    // Initial highlighting with single delay to ensure DOM is ready
-    setTimeout(() => {
-      if (isOnRecruitingPage()) {
-        highlightBestRole();
-      }
-    }, 300);
-
-    // Check for missing items immediately when script loads
-    checkForMissingItems();
+    // Initial scan with a short delay to allow Torn's in-page route/content to settle.
+    setTimeout(handlePageStateChanged, 300);
 
     setInterval(() => {
-      if (isOnRecruitingPage()) {
-        highlightBestRole();
-      }
-
-      checkForMissingItems();
+      handlePageStateChanged();
     }, CONFIG.INTERVAL_CHECK);
   }
 
