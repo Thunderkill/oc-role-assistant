@@ -1,0 +1,1570 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OC Role Assistant Config Builder</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --surface-soft: #f0f4f7;
+      --text: #17202a;
+      --muted: #5e6a75;
+      --line: #cfd8df;
+      --line-strong: #aebbc6;
+      --accent: #087f8c;
+      --accent-strong: #065f69;
+      --accent-soft: #d8f1f3;
+      --danger: #b3261e;
+      --danger-soft: #f9dedc;
+      --warning: #9a6700;
+      --warning-soft: #fff2cc;
+      --ok: #237a46;
+      --ok-soft: #dbf2e4;
+      --shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+      letter-spacing: 0;
+    }
+
+    button {
+      border: 1px solid var(--line-strong);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 6px;
+      min-height: 34px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: var(--accent);
+      color: var(--accent-strong);
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover {
+      background: var(--accent-strong);
+      color: #fff;
+    }
+
+    button.danger {
+      border-color: #d9aaa6;
+      color: var(--danger);
+    }
+
+    button.icon {
+      width: 34px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 7px 8px;
+      min-height: 34px;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 2px solid var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    textarea {
+      min-height: 360px;
+      resize: vertical;
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      margin-bottom: 5px;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(8px);
+    }
+
+    .topbar-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 12px 18px;
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .brand .subline {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .file-button {
+      position: relative;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line-strong);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 6px;
+      min-height: 34px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    .file-button input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    main {
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 14px 18px 24px;
+      display: grid;
+      grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .sidebar {
+      align-self: start;
+      position: sticky;
+      top: 76px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .tabs {
+      display: grid;
+      gap: 6px;
+    }
+
+    .tab-button {
+      width: 100%;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-button.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent-strong);
+      font-weight: 700;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .metric {
+      padding: 10px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+
+    .metric .value {
+      display: block;
+      font-size: 18px;
+      font-weight: 750;
+    }
+
+    .metric .label {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .status {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .status.ok {
+      color: var(--ok);
+      background: var(--ok-soft);
+      border-color: #9dd6b5;
+    }
+
+    .status.warn {
+      color: var(--warning);
+      background: var(--warning-soft);
+      border-color: #e9ca76;
+    }
+
+    .workspace {
+      min-width: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.25;
+    }
+
+    .panel-body {
+      padding: 14px;
+    }
+
+    .row-actions,
+    .inline-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 10px;
+      align-items: end;
+    }
+
+    .two-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .priority-layout {
+      display: grid;
+      grid-template-columns: minmax(180px, 230px) minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .priority-list {
+      display: grid;
+      gap: 6px;
+      align-content: start;
+    }
+
+    .priority-button {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      text-align: left;
+    }
+
+    .priority-button.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-weight: 700;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      min-height: 22px;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--surface-soft);
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .small-number {
+      max-width: 110px;
+    }
+
+    .empty-state {
+      padding: 18px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 6px;
+      color: var(--muted);
+      text-align: center;
+      background: var(--surface-soft);
+    }
+
+    .issue-list {
+      display: grid;
+      gap: 6px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .issue-list li {
+      padding: 8px;
+      border-radius: 6px;
+      background: var(--warning-soft);
+      color: var(--warning);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 50;
+      max-width: 360px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: #132026;
+      color: #fff;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 980px) {
+      .topbar-inner,
+      main,
+      .priority-layout,
+      .two-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar,
+      .row-actions,
+      .inline-actions {
+        justify-content: stretch;
+      }
+
+      .toolbar > *,
+      .row-actions > *,
+      .inline-actions > * {
+        flex: 1 1 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <h1>OC Role Assistant Config Builder</h1>
+          <div class="subline">Build and export <code>oc-role-assistant-config.json</code></div>
+        </div>
+        <div class="toolbar">
+          <label class="file-button">
+            Import JSON
+            <input id="fileInput" type="file" accept=".json,application/json">
+          </label>
+          <button id="copyJson" class="primary" type="button">Copy JSON</button>
+          <button id="downloadJson" type="button">Download</button>
+          <button id="resetConfig" class="danger" type="button">Reset</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <aside class="sidebar">
+        <nav class="tabs" aria-label="Config sections">
+          <button class="tab-button active" data-tab="priorities" type="button">
+            Priorities <span id="priorityTabCount" class="pill">0</span>
+          </button>
+          <button class="tab-button" data-tab="policies" type="button">
+            Policies <span id="policyTabCount" class="pill">0</span>
+          </button>
+          <button class="tab-button" data-tab="limits" type="button">
+            Limits <span id="limitTabCount" class="pill">0</span>
+          </button>
+          <button class="tab-button" data-tab="json" type="button">
+            JSON <span id="issueTabCount" class="pill">0</span>
+          </button>
+        </nav>
+
+        <div class="metric-grid">
+          <div class="metric">
+            <span id="roleRuleCount" class="value">0</span>
+            <span class="label">Role rules</span>
+          </div>
+          <div class="metric">
+            <span id="scenarioCount" class="value">0</span>
+            <span class="label">Scenarios</span>
+          </div>
+          <div class="metric">
+            <span id="groupCount" class="value">0</span>
+            <span class="label">Groups</span>
+          </div>
+          <div class="metric">
+            <span id="policyCount" class="value">0</span>
+            <span class="label">Policies</span>
+          </div>
+        </div>
+
+        <div id="validationStatus" class="status ok">Config is valid.</div>
+      </aside>
+
+      <section class="workspace">
+        <section class="panel tab-panel" data-panel="priorities">
+          <div class="panel-header">
+            <h2 class="panel-title">Priority Groups</h2>
+            <div class="row-actions">
+              <input id="newPriority" class="small-number" type="number" min="1" step="1" placeholder="Priority">
+              <button id="addPriority" type="button">Add Group</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="priority-layout">
+              <div id="priorityList" class="priority-list"></div>
+              <div id="priorityEditor"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel tab-panel hidden" data-panel="policies">
+          <div class="panel-header">
+            <h2 class="panel-title">Stall Policy</h2>
+            <button id="addPolicy" type="button">Add Scenario Policy</button>
+          </div>
+          <div class="panel-body list">
+            <section>
+              <h3 class="panel-title">Default Policy</h3>
+              <div id="defaultPolicy" class="form-grid"></div>
+            </section>
+            <section>
+              <h3 class="panel-title">Scenario Overrides</h3>
+              <div id="scenarioPolicies" class="list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="panel tab-panel hidden" data-panel="limits">
+          <div class="panel-header">
+            <h2 class="panel-title">Limits</h2>
+            <button id="addMaxCount" type="button">Add Level Limit</button>
+          </div>
+          <div class="panel-body list">
+            <div class="two-grid">
+              <div>
+                <label for="treatAsStalled">Treat as stalled after hours</label>
+                <input id="treatAsStalled" type="number" min="0" step="0.25" placeholder="Blank for disabled">
+              </div>
+              <div>
+                <label for="usageLogging">Usage logging value</label>
+                <select id="usageLogging">
+                  <option value="no">no</option>
+                  <option value="yes">yes</option>
+                </select>
+              </div>
+            </div>
+            <section>
+              <h3 class="panel-title">Max Count by Level</h3>
+              <div id="maxCountList" class="list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="panel tab-panel hidden" data-panel="json">
+          <div class="panel-header">
+            <h2 class="panel-title">JSON Output</h2>
+            <div class="row-actions">
+              <button id="applyRawJson" type="button">Apply Edited JSON</button>
+              <button id="formatJson" type="button">Format</button>
+            </div>
+          </div>
+          <div class="panel-body list">
+            <textarea id="jsonOutput" spellcheck="false"></textarea>
+            <div>
+              <h3 class="panel-title">Validation</h3>
+              <ul id="issueList" class="issue-list"></ul>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const starterConfig = {
+      "priorities": {
+        "1": [
+          { "scenario": "Ace in the Hole", "level": 9, "role": "Hacker", "minCPR": 67 }
+        ],
+        "2": [
+          { "scenario": "Ace in the Hole", "level": 9, "role": "Imitator", "minCPR": 65 },
+          { "scenario": "Ace in the Hole", "level": 9, "role": "Muscle #2", "minCPR": 66 },
+          { "scenario": "Ace in the Hole", "level": 9, "role": "Muscle #1", "minCPR": 65 }
+        ],
+        "3": [
+          { "scenario": "Ace in the Hole", "level": 9, "role": "Driver", "minCPR": 55 },
+          { "scenario": "Break the Bank", "level": 8, "role": "Muscle #3", "minCPR": 72 },
+          { "scenario": "Break the Bank", "level": 8, "role": "Thief #2", "minCPR": 72 }
+        ],
+        "4": [
+          { "scenario": "Stacking the Deck", "level": 8, "role": "Imitator", "minCPR": 72 },
+          { "scenario": "Clinical Precision", "level": 8, "role": "Imitator", "minCPR": 75 }
+        ],
+        "5": [
+          { "scenario": "Break the Bank", "level": 8, "role": "Robber", "minCPR": 65 },
+          { "scenario": "Break the Bank", "level": 8, "role": "Muscle #1", "minCPR": 65 },
+          { "scenario": "Break the Bank", "level": 8, "role": "Muscle #2", "minCPR": 65 },
+          { "scenario": "Stacking the Deck", "level": 8, "role": "Cat Burglar", "minCPR": 68 },
+          { "scenario": "Stacking the Deck", "level": 8, "role": "Hacker", "minCPR": 68 },
+          { "scenario": "Clinical Precision", "level": 8, "role": "Cat Burglar", "minCPR": 72 },
+          { "scenario": "Clinical Precision", "level": 8, "role": "Cleaner", "minCPR": 72 },
+          { "scenario": "Clinical Precision", "level": 8, "role": "Assassin", "minCPR": 70 }
+        ],
+        "6": [
+          { "scenario": "Blast from the Past", "level": 7, "role": "Muscle", "minCPR": 80 },
+          { "scenario": "Blast from the Past", "level": 7, "role": "Engineer", "minCPR": 78 },
+          { "scenario": "Stacking the Deck", "level": 8, "role": "Driver", "minCPR": 55 }
+        ],
+        "7": [
+          { "scenario": "Blast from the Past", "level": 7, "role": "Bomber", "minCPR": 75 },
+          { "scenario": "Blast from the Past", "level": 7, "role": "Picklock #1", "minCPR": 70 },
+          { "scenario": "Blast from the Past", "level": 7, "role": "Hacker", "minCPR": 70 },
+          { "scenario": "Window of Opportunity", "level": 7, "role": "Engineer", "minCPR": 75 },
+          { "scenario": "Window of Opportunity", "level": 7, "role": "Looter #1", "minCPR": 75 },
+          { "scenario": "Window of Opportunity", "level": 7, "role": "Looter #2", "minCPR": 75 },
+          { "scenario": "Window of Opportunity", "level": 7, "role": "Muscle #1", "minCPR": 75 },
+          { "scenario": "Window of Opportunity", "level": 7, "role": "Muscle #2", "minCPR": 75 }
+        ],
+        "991": [
+          { "scenario": "Break the Bank", "level": 8, "role": "Thief #1", "minCPR": 50 }
+        ],
+        "992": [
+          { "scenario": "Blast from the Past", "level": 7, "role": "Picklock #2", "minCPR": 1 }
+        ],
+        "9999": [
+          { "scenario": "Manifest Cruelty", "level": 8, "role": "Cat Burglar", "minCPR": 99 },
+          { "scenario": "Manifest Cruelty", "level": 8, "role": "Hacker", "minCPR": 99 },
+          { "scenario": "Manifest Cruelty", "level": 8, "role": "Interrogator", "minCPR": 99 },
+          { "scenario": "Manifest Cruelty", "level": 8, "role": "Reviver", "minCPR": 99 },
+          { "scenario": "Gone Fission", "level": 9, "role": "Hijacker", "minCPR": 99 },
+          { "scenario": "Gone Fission", "level": 9, "role": "Engineer", "minCPR": 99 },
+          { "scenario": "Gone Fission", "level": 9, "role": "Pickpocket", "minCPR": 99 },
+          { "scenario": "Gone Fission", "level": 9, "role": "Imitator", "minCPR": 99 },
+          { "scenario": "Gone Fission", "level": 9, "role": "Bomber", "minCPR": 99 },
+          { "scenario": "Crane Reaction", "level": 10, "role": "Sniper", "minCPR": 99 },
+          { "scenario": "Crane Reaction", "level": 10, "role": "Lookout", "minCPR": 99 },
+          { "scenario": "Crane Reaction", "level": 10, "role": "Engineer", "minCPR": 99 },
+          { "scenario": "Crane Reaction", "level": 10, "role": "Bomber", "minCPR": 99 },
+          { "scenario": "Crane Reaction", "level": 10, "role": "Muscle #1", "minCPR": 99 },
+          { "scenario": "Crane Reaction", "level": 10, "role": "Muscle #2", "minCPR": 99 }
+        ]
+      },
+      "stallPolicy": {
+        "default": {
+          "start": "allow",
+          "selectionOrder": "join-first",
+          "join": {
+            "allow": true,
+            "minHoursBeforeStall": 0,
+            "maxHoursBeforeStall": 48
+          }
+        },
+        "scenarios": {
+          "Ace in the Hole": {
+            "start": "allow",
+            "selectionOrder": "start-first",
+            "join": { "allow": true }
+          },
+          "Break the Bank": {
+            "start": "allow",
+            "selectionOrder": "start-first",
+            "join": {
+              "allow": true,
+              "minHoursBeforeStall": 0,
+              "maxHoursBeforeStall": 36
+            }
+          },
+          "Stacking the Deck": {
+            "start": "allow",
+            "selectionOrder": "start-first",
+            "join": { "allow": true }
+          },
+          "Clinical Precision": {
+            "start": "allow",
+            "selectionOrder": "start-first",
+            "join": {
+              "allow": true,
+              "minHoursBeforeStall": 0,
+              "maxHoursBeforeStall": 36
+            }
+          },
+          "Blast from the Past": {
+            "start": "allow",
+            "selectionOrder": "join-first",
+            "join": {
+              "allow": true,
+              "minHoursBeforeStall": 0,
+              "maxHoursBeforeStall": 24
+            }
+          },
+          "Window of Opportunity": {
+            "start": "allow",
+            "selectionOrder": "join-first",
+            "join": {
+              "allow": true,
+              "minHoursBeforeStall": 0,
+              "maxHoursBeforeStall": 24
+            }
+          },
+          "Manifest Cruelty": {
+            "start": "never",
+            "join": { "allow": false }
+          },
+          "Gone Fission": {
+            "start": "never",
+            "join": { "allow": false }
+          },
+          "Crane Reaction": {
+            "start": "never",
+            "join": { "allow": false }
+          }
+        }
+      },
+      "maxCount": {
+        "10": 0,
+        "9": 2,
+        "8": 99,
+        "7": 9
+      },
+      "usageLogging": "no",
+      "treatAsStalled": 6
+    };
+
+    const storageKey = "oc-role-assistant-config-builder-draft-v1";
+    let state = normalizeConfig(loadInitialConfig());
+    let activeTab = "priorities";
+    let activePriority = firstPriorityKey();
+    let toastTimer = null;
+
+    const nodes = {};
+    document.querySelectorAll("[id]").forEach((element) => {
+      nodes[element.id] = element;
+    });
+
+    function deepClone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function loadInitialConfig() {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) return JSON.parse(saved);
+      } catch (error) {
+        console.warn("Unable to load saved draft", error);
+      }
+
+      return deepClone(starterConfig);
+    }
+
+    function normalizeConfig(config) {
+      const normalized = {
+        priorities: {},
+        stallPolicy: {
+          default: {
+            start: "allow",
+            selectionOrder: "join-first",
+            join: {
+              allow: true,
+              minHoursBeforeStall: 0,
+              maxHoursBeforeStall: 48,
+            },
+          },
+          scenarios: {},
+        },
+        maxCount: {},
+        usageLogging: "no",
+        treatAsStalled: null,
+      };
+
+      Object.entries(config?.priorities || {}).forEach(([priority, rows]) => {
+        const key = String(toNumber(priority, 1));
+        normalized.priorities[key] = Array.isArray(rows)
+          ? rows.map((row) => ({
+              scenario: String(row.scenario || ""),
+              level: toNumber(row.level, 1),
+              role: String(row.role || ""),
+              minCPR: toNumber(row.minCPR, 0),
+            }))
+          : [];
+      });
+
+      const defaultPolicy = config?.stallPolicy?.default || {};
+      normalized.stallPolicy.default = normalizePolicy(defaultPolicy, false);
+
+      Object.entries(config?.stallPolicy?.scenarios || {}).forEach(([scenario, policy]) => {
+        normalized.stallPolicy.scenarios[scenario] = normalizePolicy(policy, true);
+      });
+
+      Object.entries(config?.maxCount || {}).forEach(([level, count]) => {
+        normalized.maxCount[String(toNumber(level, 0))] = toNumber(count, 0);
+      });
+
+      normalized.usageLogging = String(config?.usageLogging || "no");
+      normalized.treatAsStalled =
+        typeof config?.treatAsStalled === "number" ? config.treatAsStalled : null;
+
+      if (Object.keys(normalized.priorities).length === 0) {
+        normalized.priorities["1"] = [];
+      }
+
+      return normalized;
+    }
+
+    function normalizePolicy(policy, allowInherit) {
+      const normalized = {
+        start: policy?.start || (allowInherit ? "" : "allow"),
+        selectionOrder: policy?.selectionOrder || (allowInherit ? "" : "join-first"),
+        join: {
+          allow:
+            typeof policy?.join?.allow === "boolean"
+              ? policy.join.allow
+              : allowInherit
+                ? ""
+                : true,
+        },
+      };
+
+      if (typeof policy?.join?.minHoursBeforeStall === "number") {
+        normalized.join.minHoursBeforeStall = policy.join.minHoursBeforeStall;
+      }
+
+      if (typeof policy?.join?.maxHoursBeforeStall === "number") {
+        normalized.join.maxHoursBeforeStall = policy.join.maxHoursBeforeStall;
+      }
+
+      return normalized;
+    }
+
+    function firstPriorityKey() {
+      return Object.keys(state.priorities || {}).sort(compareNumericStrings)[0] || "1";
+    }
+
+    function compareNumericStrings(a, b) {
+      return Number(a) - Number(b);
+    }
+
+    function toNumber(value, fallback) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+
+    function getPriorityKeys() {
+      return Object.keys(state.priorities).sort(compareNumericStrings);
+    }
+
+    function buildConfig() {
+      const priorities = {};
+      getPriorityKeys().forEach((priority) => {
+        priorities[priority] = state.priorities[priority].map((row) => ({
+          scenario: row.scenario.trim(),
+          level: toNumber(row.level, 0),
+          role: row.role.trim(),
+          minCPR: toNumber(row.minCPR, 0),
+        }));
+      });
+
+      const scenarioPolicies = {};
+      Object.entries(state.stallPolicy.scenarios)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .forEach(([scenario, policy]) => {
+          if (!scenario.trim()) return;
+          scenarioPolicies[scenario.trim()] = cleanPolicy(policy, true);
+        });
+
+      const maxCount = {};
+      Object.entries(state.maxCount)
+        .sort(([a], [b]) => Number(b) - Number(a))
+        .forEach(([level, count]) => {
+          if (String(level).trim()) {
+            maxCount[String(toNumber(level, 0))] = toNumber(count, 0);
+          }
+        });
+
+      return {
+        priorities,
+        stallPolicy: {
+          default: cleanPolicy(state.stallPolicy.default, false),
+          scenarios: scenarioPolicies,
+        },
+        maxCount,
+        usageLogging: state.usageLogging || "no",
+        treatAsStalled:
+          typeof state.treatAsStalled === "number" ? state.treatAsStalled : null,
+      };
+    }
+
+    function cleanPolicy(policy, allowInherit) {
+      const output = {};
+
+      if (!allowInherit || policy.start) {
+        output.start = policy.start || "allow";
+      }
+
+      if (!allowInherit || policy.selectionOrder) {
+        output.selectionOrder = policy.selectionOrder || "join-first";
+      }
+
+      output.join = {};
+      if (!allowInherit || typeof policy.join.allow === "boolean") {
+        output.join.allow =
+          typeof policy.join.allow === "boolean" ? policy.join.allow : true;
+      }
+
+      if (typeof policy.join.minHoursBeforeStall === "number") {
+        output.join.minHoursBeforeStall = policy.join.minHoursBeforeStall;
+      }
+
+      if (typeof policy.join.maxHoursBeforeStall === "number") {
+        output.join.maxHoursBeforeStall = policy.join.maxHoursBeforeStall;
+      }
+
+      return output;
+    }
+
+    function saveDraft() {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function render() {
+      saveDraft();
+      renderTabs();
+      renderMetrics();
+      renderPriorities();
+      renderPolicies();
+      renderLimits();
+      renderJson();
+    }
+
+    function renderTabs() {
+      document.querySelectorAll(".tab-button").forEach((button) => {
+        button.classList.toggle("active", button.dataset.tab === activeTab);
+      });
+
+      document.querySelectorAll(".tab-panel").forEach((panel) => {
+        panel.classList.toggle("hidden", panel.dataset.panel !== activeTab);
+      });
+    }
+
+    function renderMetrics() {
+      const config = buildConfig();
+      const roleRules = Object.values(config.priorities).reduce(
+        (total, rows) => total + rows.length,
+        0,
+      );
+      const scenarios = new Set();
+      Object.values(config.priorities).forEach((rows) => {
+        rows.forEach((row) => {
+          if (row.scenario) scenarios.add(row.scenario);
+        });
+      });
+
+      const policies = Object.keys(config.stallPolicy.scenarios).length;
+      const limits = Object.keys(config.maxCount).length;
+      const issues = validateConfig(config);
+
+      nodes.roleRuleCount.textContent = roleRules;
+      nodes.scenarioCount.textContent = scenarios.size;
+      nodes.groupCount.textContent = Object.keys(config.priorities).length;
+      nodes.policyCount.textContent = policies;
+      nodes.priorityTabCount.textContent = roleRules;
+      nodes.policyTabCount.textContent = policies;
+      nodes.limitTabCount.textContent = limits;
+      nodes.issueTabCount.textContent = issues.length;
+
+      nodes.validationStatus.className = issues.length ? "status warn" : "status ok";
+      nodes.validationStatus.textContent = issues.length
+        ? `${issues.length} issue${issues.length === 1 ? "" : "s"} found.`
+        : "Config is valid.";
+    }
+
+    function renderPriorities() {
+      const keys = getPriorityKeys();
+      if (!state.priorities[activePriority]) activePriority = keys[0];
+
+      nodes.priorityList.innerHTML = keys
+        .map((priority) => {
+          const count = state.priorities[priority].length;
+          return `
+            <button class="priority-button ${priority === activePriority ? "active" : ""}" data-priority="${escapeHtml(priority)}" type="button">
+              <span>Priority ${escapeHtml(priority)}</span>
+              <span class="pill">${count}</span>
+            </button>
+          `;
+        })
+        .join("");
+
+      nodes.priorityList.querySelectorAll("[data-priority]").forEach((button) => {
+        button.addEventListener("click", () => {
+          activePriority = button.dataset.priority;
+          render();
+        });
+      });
+
+      renderPriorityEditor();
+    }
+
+    function renderPriorityEditor() {
+      const rows = state.priorities[activePriority] || [];
+      nodes.priorityEditor.innerHTML = `
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Priority ${escapeHtml(activePriority)}</h3>
+            <div class="row-actions">
+              <input class="small-number" id="renamePriority" type="number" min="1" step="1" value="${escapeHtml(activePriority)}">
+              <button id="renamePriorityButton" type="button">Rename</button>
+              <button id="addRoleRule" type="button">Add Role</button>
+              <button id="deletePriority" class="danger" type="button">Delete Group</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            ${rows.length ? renderRoleTable(rows) : '<div class="empty-state">No role rules in this priority group.</div>'}
+          </div>
+        </div>
+      `;
+
+      nodes.priorityEditor.querySelector("#addRoleRule").addEventListener("click", () => {
+        rows.push({ scenario: "", level: 7, role: "", minCPR: 70 });
+        render();
+      });
+
+      nodes.priorityEditor.querySelector("#deletePriority").addEventListener("click", () => {
+        if (getPriorityKeys().length === 1) {
+          toast("Keep at least one priority group.");
+          return;
+        }
+
+        delete state.priorities[activePriority];
+        activePriority = firstPriorityKey();
+        render();
+      });
+
+      nodes.priorityEditor.querySelector("#renamePriorityButton").addEventListener("click", () => {
+        const next = String(toNumber(nodes.priorityEditor.querySelector("#renamePriority").value, 1));
+        if (!next || next === activePriority) return;
+        if (state.priorities[next]) {
+          toast(`Priority ${next} already exists.`);
+          return;
+        }
+
+        state.priorities[next] = state.priorities[activePriority];
+        delete state.priorities[activePriority];
+        activePriority = next;
+        render();
+      });
+
+      nodes.priorityEditor.querySelectorAll("[data-role-index]").forEach((rowElement) => {
+        bindRoleRow(rowElement, rows);
+      });
+    }
+
+    function renderRoleTable(rows) {
+      return `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Scenario</th>
+                <th>Level</th>
+                <th>Role</th>
+                <th>Min CPR</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map((row, index) => `
+                <tr data-role-index="${index}">
+                  <td><input data-field="scenario" value="${escapeHtml(row.scenario)}" list="scenarioNames"></td>
+                  <td><input data-field="level" type="number" min="1" max="10" step="1" value="${escapeHtml(row.level)}"></td>
+                  <td><input data-field="role" value="${escapeHtml(row.role)}"></td>
+                  <td><input data-field="minCPR" type="number" min="0" max="100" step="1" value="${escapeHtml(row.minCPR)}"></td>
+                  <td>
+                    <div class="inline-actions">
+                      <button data-action="duplicate" type="button">Duplicate</button>
+                      <button data-action="delete" class="danger" type="button">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+        ${renderScenarioDatalist()}
+      `;
+    }
+
+    function bindRoleRow(rowElement, rows) {
+      const index = Number(rowElement.dataset.roleIndex);
+      rowElement.querySelectorAll("[data-field]").forEach((input) => {
+        input.addEventListener("change", () => {
+          const field = input.dataset.field;
+          rows[index][field] =
+            field === "level" || field === "minCPR" ? toNumber(input.value, 0) : input.value;
+          render();
+        });
+      });
+
+      rowElement.querySelector('[data-action="duplicate"]').addEventListener("click", () => {
+        rows.splice(index + 1, 0, deepClone(rows[index]));
+        render();
+      });
+
+      rowElement.querySelector('[data-action="delete"]').addEventListener("click", () => {
+        rows.splice(index, 1);
+        render();
+      });
+    }
+
+    function renderScenarioDatalist() {
+      const names = getKnownScenarios();
+      return `
+        <datalist id="scenarioNames">
+          ${names.map((name) => `<option value="${escapeHtml(name)}"></option>`).join("")}
+        </datalist>
+      `;
+    }
+
+    function getKnownScenarios() {
+      const names = new Set();
+      Object.values(state.priorities).forEach((rows) => {
+        rows.forEach((row) => {
+          if (row.scenario.trim()) names.add(row.scenario.trim());
+        });
+      });
+      Object.keys(state.stallPolicy.scenarios).forEach((name) => {
+        if (name.trim()) names.add(name.trim());
+      });
+      return Array.from(names).sort((a, b) => a.localeCompare(b));
+    }
+
+    function renderPolicies() {
+      nodes.defaultPolicy.innerHTML = renderPolicyControls(
+        "default",
+        state.stallPolicy.default,
+        false,
+      );
+      bindPolicyControls(nodes.defaultPolicy, state.stallPolicy.default, false);
+
+      const policies = Object.entries(state.stallPolicy.scenarios).sort(([a], [b]) =>
+        a.localeCompare(b),
+      );
+
+      nodes.scenarioPolicies.innerHTML = policies.length
+        ? policies
+            .map(([scenario, policy], index) => `
+              <div class="panel" data-policy-index="${index}" data-scenario="${escapeHtml(scenario)}">
+                <div class="panel-header">
+                  <input data-policy-name value="${escapeHtml(scenario)}" list="scenarioNames" aria-label="Scenario name">
+                  <button data-delete-policy class="danger" type="button">Delete</button>
+                </div>
+                <div class="panel-body">
+                  <div class="form-grid">${renderPolicyControls(`scenario-${index}`, policy, true)}</div>
+                </div>
+              </div>
+            `)
+            .join("") + renderScenarioDatalist()
+        : '<div class="empty-state">No scenario overrides.</div>';
+
+      nodes.scenarioPolicies.querySelectorAll("[data-policy-index]").forEach((policyElement) => {
+        const originalName = policyElement.dataset.scenario;
+        const policy = state.stallPolicy.scenarios[originalName];
+        bindPolicyControls(policyElement, policy, true);
+
+        policyElement.querySelector("[data-policy-name]").addEventListener("change", (event) => {
+          const nextName = event.target.value.trim();
+          if (!nextName || nextName === originalName) {
+            render();
+            return;
+          }
+          if (state.stallPolicy.scenarios[nextName]) {
+            toast(`${nextName} already has a policy.`);
+            render();
+            return;
+          }
+          state.stallPolicy.scenarios[nextName] = policy;
+          delete state.stallPolicy.scenarios[originalName];
+          render();
+        });
+
+        policyElement.querySelector("[data-delete-policy]").addEventListener("click", () => {
+          delete state.stallPolicy.scenarios[originalName];
+          render();
+        });
+      });
+    }
+
+    function renderPolicyControls(prefix, policy, allowInherit) {
+      const allowValue =
+        typeof policy.join.allow === "boolean" ? String(policy.join.allow) : "";
+
+      return `
+        <div>
+          <label for="${prefix}-start">Start</label>
+          <select id="${prefix}-start" data-policy-field="start">
+            ${allowInherit ? '<option value="">inherit</option>' : ""}
+            <option value="allow" ${policy.start === "allow" ? "selected" : ""}>allow</option>
+            <option value="never" ${policy.start === "never" ? "selected" : ""}>never</option>
+          </select>
+        </div>
+        <div>
+          <label for="${prefix}-order">Selection order</label>
+          <select id="${prefix}-order" data-policy-field="selectionOrder">
+            ${allowInherit ? '<option value="">inherit</option>' : ""}
+            <option value="join-first" ${policy.selectionOrder === "join-first" ? "selected" : ""}>join-first</option>
+            <option value="start-first" ${policy.selectionOrder === "start-first" ? "selected" : ""}>start-first</option>
+          </select>
+        </div>
+        <div>
+          <label for="${prefix}-allow">Join</label>
+          <select id="${prefix}-allow" data-policy-field="join.allow">
+            ${allowInherit ? '<option value="">inherit</option>' : ""}
+            <option value="true" ${allowValue === "true" ? "selected" : ""}>allow</option>
+            <option value="false" ${allowValue === "false" ? "selected" : ""}>block</option>
+          </select>
+        </div>
+        <div>
+          <label for="${prefix}-min">Min hours before stall</label>
+          <input id="${prefix}-min" data-policy-field="join.minHoursBeforeStall" type="number" min="0" step="0.25" value="${numberOrBlank(policy.join.minHoursBeforeStall)}" placeholder="blank">
+        </div>
+        <div>
+          <label for="${prefix}-max">Max hours before stall</label>
+          <input id="${prefix}-max" data-policy-field="join.maxHoursBeforeStall" type="number" min="0" step="0.25" value="${numberOrBlank(policy.join.maxHoursBeforeStall)}" placeholder="blank">
+        </div>
+      `;
+    }
+
+    function bindPolicyControls(container, policy, allowInherit) {
+      container.querySelectorAll("[data-policy-field]").forEach((input) => {
+        input.addEventListener("change", () => {
+          const field = input.dataset.policyField;
+          if (field === "start" || field === "selectionOrder") {
+            policy[field] = input.value || (allowInherit ? "" : field === "start" ? "allow" : "join-first");
+          } else if (field === "join.allow") {
+            policy.join.allow =
+              input.value === "" ? "" : input.value === "true";
+          } else if (field === "join.minHoursBeforeStall" || field === "join.maxHoursBeforeStall") {
+            const key = field.split(".")[1];
+            if (input.value === "") {
+              delete policy.join[key];
+            } else {
+              policy.join[key] = toNumber(input.value, 0);
+            }
+          }
+          render();
+        });
+      });
+    }
+
+    function renderLimits() {
+      nodes.treatAsStalled.value = numberOrBlank(state.treatAsStalled);
+      nodes.usageLogging.value = state.usageLogging || "no";
+
+      const entries = Object.entries(state.maxCount).sort(([a], [b]) => Number(b) - Number(a));
+      nodes.maxCountList.innerHTML = entries.length
+        ? entries
+            .map(([level, count], index) => `
+              <div class="form-grid" data-max-index="${index}" data-level="${escapeHtml(level)}">
+                <div>
+                  <label>Level</label>
+                  <input data-max-field="level" type="number" min="1" max="10" step="1" value="${escapeHtml(level)}">
+                </div>
+                <div>
+                  <label>Max count</label>
+                  <input data-max-field="count" type="number" min="0" step="1" value="${escapeHtml(count)}">
+                </div>
+                <div class="row-actions">
+                  <button data-delete-max class="danger" type="button">Delete</button>
+                </div>
+              </div>
+            `)
+            .join("")
+        : '<div class="empty-state">No max count limits.</div>';
+
+      nodes.maxCountList.querySelectorAll("[data-max-index]").forEach((row) => {
+        const originalLevel = row.dataset.level;
+        row.querySelector('[data-max-field="level"]').addEventListener("change", (event) => {
+          const nextLevel = String(toNumber(event.target.value, 0));
+          if (!nextLevel || nextLevel === originalLevel) {
+            render();
+            return;
+          }
+          if (state.maxCount[nextLevel] !== undefined) {
+            toast(`Level ${nextLevel} already has a max count.`);
+            render();
+            return;
+          }
+          state.maxCount[nextLevel] = state.maxCount[originalLevel];
+          delete state.maxCount[originalLevel];
+          render();
+        });
+        row.querySelector('[data-max-field="count"]').addEventListener("change", (event) => {
+          state.maxCount[originalLevel] = toNumber(event.target.value, 0);
+          render();
+        });
+        row.querySelector("[data-delete-max]").addEventListener("click", () => {
+          delete state.maxCount[originalLevel];
+          render();
+        });
+      });
+    }
+
+    function renderJson() {
+      const config = buildConfig();
+      const issues = validateConfig(config);
+      nodes.jsonOutput.value = JSON.stringify(config, null, 2);
+
+      nodes.issueList.innerHTML = issues.length
+        ? issues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join("")
+        : '<li class="status ok">No validation issues.</li>';
+    }
+
+    function validateConfig(config) {
+      const issues = [];
+
+      Object.entries(config.priorities).forEach(([priority, rows]) => {
+        if (!Number.isFinite(Number(priority)) || Number(priority) <= 0) {
+          issues.push(`Priority ${priority} should be a positive number.`);
+        }
+        rows.forEach((row, index) => {
+          const label = `Priority ${priority}, row ${index + 1}`;
+          if (!row.scenario) issues.push(`${label}: scenario is empty.`);
+          if (!row.role) issues.push(`${label}: role is empty.`);
+          if (!Number.isFinite(row.level) || row.level < 1 || row.level > 10) {
+            issues.push(`${label}: level should be between 1 and 10.`);
+          }
+          if (!Number.isFinite(row.minCPR) || row.minCPR < 0 || row.minCPR > 100) {
+            issues.push(`${label}: min CPR should be between 0 and 100.`);
+          }
+        });
+      });
+
+      Object.entries(config.maxCount).forEach(([level, count]) => {
+        if (!Number.isFinite(Number(level)) || Number(level) < 1 || Number(level) > 10) {
+          issues.push(`Max count level ${level} should be between 1 and 10.`);
+        }
+        if (!Number.isFinite(count) || count < 0) {
+          issues.push(`Max count for level ${level} should be zero or higher.`);
+        }
+      });
+
+      Object.entries(config.stallPolicy.scenarios).forEach(([scenario, policy]) => {
+        if (!scenario.trim()) issues.push("Scenario policy has an empty scenario name.");
+        validatePolicyHours(policy, `Policy ${scenario}`, issues);
+      });
+
+      validatePolicyHours(config.stallPolicy.default, "Default policy", issues);
+
+      return issues;
+    }
+
+    function validatePolicyHours(policy, label, issues) {
+      const min = policy.join?.minHoursBeforeStall;
+      const max = policy.join?.maxHoursBeforeStall;
+      if (typeof min === "number" && typeof max === "number" && min > max) {
+        issues.push(`${label}: min hours is greater than max hours.`);
+      }
+    }
+
+    function numberOrBlank(value) {
+      return typeof value === "number" && Number.isFinite(value) ? String(value) : "";
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function toast(message) {
+      nodes.toast.textContent = message;
+      nodes.toast.classList.add("visible");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => nodes.toast.classList.remove("visible"), 2200);
+    }
+
+    function downloadJson() {
+      const blob = new Blob([JSON.stringify(buildConfig(), null, 2) + "\n"], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "oc-role-assistant-config.json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function applyImportedConfig(config) {
+      state = normalizeConfig(config);
+      activePriority = firstPriorityKey();
+      render();
+      toast("Config loaded.");
+    }
+
+    document.querySelectorAll(".tab-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        activeTab = button.dataset.tab;
+        render();
+      });
+    });
+
+    nodes.addPriority.addEventListener("click", () => {
+      const next = String(toNumber(nodes.newPriority.value, 0));
+      if (!next || next === "0") {
+        toast("Enter a priority number.");
+        return;
+      }
+      if (state.priorities[next]) {
+        toast(`Priority ${next} already exists.`);
+        return;
+      }
+      state.priorities[next] = [];
+      activePriority = next;
+      nodes.newPriority.value = "";
+      render();
+    });
+
+    nodes.addPolicy.addEventListener("click", () => {
+      let base = "New Scenario";
+      let name = base;
+      let suffix = 2;
+      while (state.stallPolicy.scenarios[name]) {
+        name = `${base} ${suffix}`;
+        suffix += 1;
+      }
+      state.stallPolicy.scenarios[name] = normalizePolicy({}, true);
+      render();
+    });
+
+    nodes.addMaxCount.addEventListener("click", () => {
+      let level = "7";
+      while (state.maxCount[level] !== undefined) {
+        level = String(Number(level) + 1);
+      }
+      state.maxCount[level] = 0;
+      render();
+    });
+
+    nodes.treatAsStalled.addEventListener("change", () => {
+      state.treatAsStalled =
+        nodes.treatAsStalled.value === "" ? null : toNumber(nodes.treatAsStalled.value, 0);
+      render();
+    });
+
+    nodes.usageLogging.addEventListener("change", () => {
+      state.usageLogging = nodes.usageLogging.value;
+      render();
+    });
+
+    nodes.copyJson.addEventListener("click", async () => {
+      const text = JSON.stringify(buildConfig(), null, 2);
+      await navigator.clipboard.writeText(text);
+      toast("JSON copied.");
+    });
+
+    nodes.downloadJson.addEventListener("click", downloadJson);
+
+    nodes.resetConfig.addEventListener("click", () => {
+      if (!confirm("Reset to the embedded starter config?")) return;
+      state = normalizeConfig(deepClone(starterConfig));
+      activePriority = firstPriorityKey();
+      render();
+      toast("Config reset.");
+    });
+
+    nodes.fileInput.addEventListener("change", async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        applyImportedConfig(JSON.parse(text));
+      } catch (error) {
+        toast(`Import failed: ${error.message}`);
+      } finally {
+        event.target.value = "";
+      }
+    });
+
+    nodes.applyRawJson.addEventListener("click", () => {
+      try {
+        applyImportedConfig(JSON.parse(nodes.jsonOutput.value));
+      } catch (error) {
+        toast(`JSON parse failed: ${error.message}`);
+      }
+    });
+
+    nodes.formatJson.addEventListener("click", () => {
+      try {
+        nodes.jsonOutput.value = JSON.stringify(JSON.parse(nodes.jsonOutput.value), null, 2);
+      } catch (error) {
+        toast(`JSON parse failed: ${error.message}`);
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
