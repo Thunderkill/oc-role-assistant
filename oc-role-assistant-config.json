@@ -1,0 +1,15 @@
+{
+  "priorities": {},
+  "stallPolicy": {
+    "default": {
+      "start": "allow",
+      "selectionOrder": "join-first",
+      "join": {
+        "allow": true
+      }
+    },
+    "scenarios": {}
+  },
+  "maxCount": {},
+  "treatAsStalled": null
+}
